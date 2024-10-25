@@ -1,6 +1,20 @@
 #include "img_data.hpp"
 #include <fstream>
 
+
+std::vector<float> Image::convert_to_01_vector()
+{
+	std::vector<float> vec;
+	vec.reserve(width*height);
+
+	for(uint32_t i = 0; i < width*height; ++i)
+	{
+		vec[i] = ((float)data[i] / 255.0f);
+	}
+
+	return std::move(vec);
+}
+
 uint32_t endian_swap( uint32_t num )
 {
 	return ((num & 0xff000000) >> 24) | ((num & 0x00ff0000) >> 8) | ((num & 0x0000ff00) << 8) | (num << 24);

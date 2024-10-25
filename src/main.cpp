@@ -1,5 +1,6 @@
 #include "img_data.hpp"
 #include "knn.hpp"
+#include "ann.hpp"
 
 #include <iostream>
 
@@ -25,14 +26,33 @@ float test_knn(
 
 int main()
 {
+	// Loads the training and image data
 	auto training_images = load_images("../dataset/train-images.idx3-ubyte");
 	auto training_labels = load_labels("../dataset/train-labels.idx1-ubyte");
 
 	auto test_images = load_images("../dataset/t10k-images.idx3-ubyte");
 	auto test_labels = load_labels("../dataset/t10k-labels.idx1-ubyte");
 
-	size_t SAMPLE_SIZE = 50;
-	std::cout << test_knn(SAMPLE_SIZE, 8, training_images, training_labels, test_images, test_labels) * 100 << "%" << std::endl;
+	// Creates a neural network
+	NeuralNetwork network(27*27, {
+		LayerDescription(NeuralNetworkFunction::RELU, 16),
+		LayerDescription(NeuralNetworkFunction::RELU, 16),
+		LayerDescription(NeuralNetworkFunction::RELU, 10)
+	});
+
+	std::cout << "Break point\n";
+
+	// Converts the training data to float vectors
+	std::vector<NeuralNetwork::Example> examples;
+	for(size_t i = 0; i < test_images.size(); ++i)
+	{
+		std::vector<float> answer(10, 1.0f);
+		answer[(size_t)test_labels[i]] = 1.0f;
+		examples.emplace_back(std::make_pair(test_images[i].convert_to_01_vector(), answer));
+	}
+
+	// Train the neural network
+	// network.train(examples);
 
 	return 0;
 }
