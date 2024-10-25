@@ -32,16 +32,14 @@ int main()
 
 	auto test_images = load_images("../dataset/t10k-images.idx3-ubyte");
 	auto test_labels = load_labels("../dataset/t10k-labels.idx1-ubyte");
-
+	
 	// Creates a neural network
 	NeuralNetwork network(27*27, {
-		LayerDescription(NeuralNetworkFunction::RELU, 16),
-		LayerDescription(NeuralNetworkFunction::RELU, 16),
-		LayerDescription(NeuralNetworkFunction::RELU, 10)
+		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16),
+		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16),
+		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 10)
 	});
-
-	std::cout << "Break point\n";
-
+	
 	// Converts the training data to float vectors
 	std::vector<NeuralNetwork::Example> examples;
 	for(size_t i = 0; i < test_images.size(); ++i)
@@ -53,6 +51,11 @@ int main()
 
 	// Train the neural network
 	// network.train(examples);
+
+	// Saves the current weights and biases to disk
+	// network.save("../models/numbers.txt");
+
+	
 
 	return 0;
 }

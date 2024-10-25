@@ -3,21 +3,6 @@
 #include <string>
 #include <cstdint>
 
-enum class NeuralNetworkFunction 
-{
-	SIGMOID,
-	RELU
-};
-
-struct LayerDescription
-{
-	LayerDescription(NeuralNetworkFunction function, uint32_t size):
-		function(function),
-		size(size) {}
-	NeuralNetworkFunction function;
-	uint32_t size;
-};
-
 /**
  * @brief Represents an artificial neural networks
  * 
@@ -26,6 +11,21 @@ class NeuralNetwork
 {
 public:
 	using Example = std::pair<std::vector<float>, std::vector<float>>;
+
+	enum class Function 
+	{
+		SIGMOID,
+		RELU
+	};
+
+	struct LayerDescription
+	{
+		LayerDescription(NeuralNetwork::Function function, uint32_t size):
+			function(function),
+			size(size) {}
+		NeuralNetwork::Function function;
+		uint32_t size;
+	};
 
 	/**
 	 * @brief Construct a new Neural Network object
@@ -46,7 +46,7 @@ public:
 	bool load(const std::string &path);
 
 	/**
-	 * @brief Saves the current weights and biases to disk
+	 * @brief Serealize the current weights and biases to disk
 	 * 
 	 * @param path 
 	 */
@@ -76,15 +76,21 @@ private:
 		float bias;
 	};
 
-	struct NeuralNetworkLayer 
+	struct Layer 
 	{
-		NeuralNetworkLayer(NeuralNetworkFunction function, const std::vector<Neuron> &neurons):
+		Layer(NeuralNetwork::Function function, const std::vector<Neuron> &neurons):
 			function(function), neurons(neurons) {}
-		NeuralNetworkFunction function;
+		NeuralNetwork::Function function;
 		std::vector<Neuron> neurons;
 	};
 
-	std::vector<NeuralNetworkLayer> layers;
+	std::vector<float> apply_layer( const std::vector<float> &input, const NeuralNetwork::Layer &layer );
+
+	float neuron_activation( const std::vector<float> &input, NeuralNetwork::Function function, const Neuron &neuron);
+
+	float apply_function( float input, NeuralNetwork::Function function );
+
+	std::vector<Layer> layers;
 	uint32_t input_size;
 	uint32_t output_size;
 };
