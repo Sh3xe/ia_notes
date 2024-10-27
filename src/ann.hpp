@@ -15,7 +15,8 @@ public:
 	enum class Function 
 	{
 		SIGMOID,
-		RELU
+		RELU,
+		IDENTITY
 	};
 
 	struct LayerDescription
@@ -50,7 +51,7 @@ public:
 	 * 
 	 * @param path 
 	 */
-	void save(const std::string &path);
+	bool save(const std::string &path);
 
 	/**
 	 * @brief Apply the neural network to an input vector
@@ -70,6 +71,7 @@ public:
 private:
 	struct Neuron
 	{
+		Neuron() {}
 		Neuron(const std::vector<float> &weights, float bias):
 			weights(weights), bias(bias) {}
 		std::vector<float> weights;
@@ -84,13 +86,82 @@ private:
 		std::vector<Neuron> neurons;
 	};
 
+	/**
+	 * @brief Stores the partial derivate of the error over the neuron data for a single example
+	 * 
+	 */
+	struct BackPropagationNeuronData
+	{
+		// neuron activation
+		float activation;
+
+		// neuron output = f^l(activation)
+		float output;
+
+		// derivate of the error over the neuron output
+		float d_err;
+
+		// derivate of the error over the neuron bias
+		float d_bias;
+
+		// derivate of the error over the neuron weigths
+		std::vector<float> d_weights;
+	};
+
+	/**
+	 * @brief Stores all the partial derivates of the error over the network parameters as well as intermediary values for a single example
+	 * 
+	 */
+	using BackPropagationLayerData = std::vector<BackPropagationNeuronData>; 
+
+	/**
+	 * @brief Struct containing all the gradient of the error for a single example
+	 * 
+	 */
+	using BackPropagationData = std::vector<BackPropagationLayerData>;
+
+	BackPropagationData calculate_gradient(const Example &example);
+
+	void apply_and_save(const std::vector<float> &input, BackPropagationData &data);
+
+	void construct( uint32_t input_size, const std::vector<LayerDescription> &layers, bool random = true );
+
 	std::vector<float> apply_layer( const std::vector<float> &input, const NeuralNetwork::Layer &layer );
 
 	float neuron_activation( const std::vector<float> &input, NeuralNetwork::Function function, const Neuron &neuron);
 
 	float apply_function( float input, NeuralNetwork::Function function );
 
+	float apply_derivate( float input, NeuralNetwork::Function function );
+
+	/**
+	 * @brief Converts the NeuralNetwork::Function union to a string
+	 * 
+	 * @param function 
+	 * @return std::string 
+	 */
+	std::string function_name( NeuralNetwork::Function function );
+
+	/**
+	 * @brief inverse of "function_name"
+	 * 
+	 * @param name 
+	 * @return NeuralNetwork::Function 
+	 */
+	NeuralNetwork::Function function_from_name( const std::string &name );
+
+	/**
+	 * @brief Clear all of the memory associated with the ann
+	 * 
+	 */
+	void clear();
+
+	// Layers of the network, the last one is by definition the output and a softmax will be applied when running the network for an input
 	std::vector<Layer> layers;
+
+	// size of the input
 	uint32_t input_size;
+
+	// size of the output
 	uint32_t output_size;
 };

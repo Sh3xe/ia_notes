@@ -1,7 +1,6 @@
 #include "img_data.hpp"
 #include <fstream>
 
-
 std::vector<float> Image::convert_to_01_vector()
 {
 	std::vector<float> vec;
@@ -22,12 +21,11 @@ uint32_t endian_swap( uint32_t num )
 
 std::vector<Image> load_images( const std::string &file_path )
 {
-	// Ouverture du fichier
 	std::fstream file {file_path, std::ios::in | std::ios::binary };
 
 	if( !file ) return {};
 
-	// On récupère l'en-tête
+	// Fetching the header data
 	uint32_t image_count = 0, magic_number = 0;
 	size_t width = 0, height = 0;
 	file.read( (char*)&magic_number, 4);
@@ -35,7 +33,7 @@ std::vector<Image> load_images( const std::string &file_path )
 	file.read( (char*)&height, 4 );
 	file.read( (char*)&width, 4 );
 
-	// On échange le boutisme si besoin
+	// We switch the endianess if needed
 	if( magic_number != 2051) 
 	{
 		image_count = endian_swap(image_count);
@@ -72,17 +70,16 @@ std::vector<Image> load_images( const std::string &file_path )
 
 std::vector<uint8_t> load_labels( const std::string &file_path )
 {
-	// Ouverture du fichier
 	std::fstream file {file_path, std::ios::in | std::ios::binary };
 
 	if( !file ) return {};
 
-	// On récupère l'en-tête
+	// Fetching header
 	uint32_t label_count = 0, magic_number = 0;
 	file.read( (char*)&magic_number, 4);
 	file.read( (char*)&label_count, 4);
 
-	// On échange le boutisme si besoin
+	// Switch the endianness if needed
 	if( magic_number != 2049) 
 	{
 		magic_number = endian_swap(magic_number);
@@ -94,7 +91,7 @@ std::vector<uint8_t> load_labels( const std::string &file_path )
 	std::vector<uint8_t> labels;
 	labels.reserve(label_count);
 
-	// Labels...
+	// Get the labels...
 	for( size_t i = 0; i < label_count; ++i )
 	{
 		uint8_t byte = 0;

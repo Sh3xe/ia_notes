@@ -18,6 +18,18 @@ struct Image
 	uint32_t height;
 };
 
+/**
+ * @brief Loads the MNIST images data in file_path
+ * 
+ * @param file_path 
+ * @return std::vector<Image> 
+ */
 std::vector<Image> load_images( const std::string &file_path );
 
+/**
+ * @brief Loads the MNIST image labels located in file_path
+ * 
+ * @param file_path 
+ * @return std::vector<uint8_t> 
+ */
 std::vector<uint8_t> load_labels( const std::string &file_path );
