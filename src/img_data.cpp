@@ -8,7 +8,7 @@ std::vector<float> Image::convert_to_01_vector()
 
 	for(uint32_t i = 0; i < width*height; ++i)
 	{
-		vec[i] = ((float)data[i] / 255.0f);
+		vec.push_back((float)data[i] / 255.0f);
 	}
 
 	return std::move(vec);

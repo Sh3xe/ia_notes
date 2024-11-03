@@ -1,8 +1,10 @@
 # Implementation of IA algorithms
 
-This repository contains the implementation of differents IA algorithm written in C++
+This repository contains the implementation of differents IA algorithm written in C++.
 
-This code is commented and meant to be used for educationnal purpose
+The code is commented and meant to be used for educationnal purpose.
+
+It implements the K nearest neighbours algorithm and Artificial neural networks.
 
 # How to run
 

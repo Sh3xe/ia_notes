@@ -35,7 +35,7 @@ public:
 	 * @param output_size the size of the output
 	 * @param layers a description of the hidden layers
 	 */
-	NeuralNetwork(uint32_t input_size, const std::vector<LayerDescription> &layers);
+	NeuralNetwork(uint32_t input_size, uint32_t output_size, const std::vector<LayerDescription> &hidden_layers);
 
 	/**
 	 * @brief Loads the current weights and biases from disk
@@ -66,7 +66,7 @@ public:
 	 * 
 	 * @param examples 
 	 */
-	void train( const std::vector<Example> &examples );
+	void train( const std::vector<Example> &examples, size_t thread_count, float max_time_seconds  = 100.0f);
 
 private:
 	struct Neuron
@@ -92,17 +92,22 @@ private:
 	 */
 	struct BackPropagationNeuronData
 	{
+		BackPropagationNeuronData() {}
+
+		BackPropagationNeuronData(size_t size):
+			d_weights(size, 0.0f) {}
+		
 		// neuron activation
-		float activation;
+		float activation = 0.0f;
 
 		// neuron output = f^l(activation)
-		float output;
+		float output = 0.0f;
 
 		// derivate of the error over the neuron output
-		float d_err;
+		float d_err = 0.0f;
 
 		// derivate of the error over the neuron bias
-		float d_bias;
+		float d_bias = 0.0f;
 
 		// derivate of the error over the neuron weigths
 		std::vector<float> d_weights;
@@ -112,7 +117,7 @@ private:
 	 * @brief Stores all the partial derivates of the error over the network parameters as well as intermediary values for a single example
 	 * 
 	 */
-	using BackPropagationLayerData = std::vector<BackPropagationNeuronData>; 
+	using BackPropagationLayerData = std::vector<BackPropagationNeuronData>;
 
 	/**
 	 * @brief Struct containing all the gradient of the error for a single example
@@ -120,15 +125,17 @@ private:
 	 */
 	using BackPropagationData = std::vector<BackPropagationLayerData>;
 
+	BackPropagationData construct_empty_backprop_data();
+
 	BackPropagationData calculate_gradient(const Example &example);
 
-	void apply_and_save(const std::vector<float> &input, BackPropagationData &data);
+	std::vector<float> apply_and_save(const std::vector<float> &input, BackPropagationData &data);
 
-	void construct( uint32_t input_size, const std::vector<LayerDescription> &layers, bool random = true );
+	void construct( uint32_t input_size, uint32_t output_size, const std::vector<LayerDescription> &layers, bool random = true );
 
 	std::vector<float> apply_layer( const std::vector<float> &input, const NeuralNetwork::Layer &layer );
 
-	float neuron_activation( const std::vector<float> &input, NeuralNetwork::Function function, const Neuron &neuron);
+	float neuron_activation( const std::vector<float> &input, const Neuron &neuron);
 
 	float apply_function( float input, NeuralNetwork::Function function );
 

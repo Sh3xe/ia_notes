@@ -4,15 +4,18 @@
 #include <cassert>
 #include <cmath>
 #include <fstream>
+#include <iostream>
 
 NeuralNetwork::NeuralNetwork(
 	uint32_t input_size,
+	uint32_t output_size,
 	const std::vector<LayerDescription> &layers_desc ):
-	input_size(input_size)
+	input_size(input_size),
+	output_size(output_size)
 {
 	assert(layers_desc.size() >= 1 && "Neural network cannot be empty");
 
-	construct(input_size, layers_desc, input_size);
+	construct(input_size, output_size, layers_desc, true);
 }
 
 bool NeuralNetwork::load( const std::string &path )
@@ -123,6 +126,9 @@ std::vector<float> NeuralNetwork::apply( const std::vector<float> &input )
 	for(const auto &layer: layers)
 	{
 		current_activation = apply_layer(input, layer);
+
+		for(auto &act: current_activation)
+			act = apply_function(act, layer.function);
 	}
 
 	// Apply the softmax function for the last output
@@ -142,32 +148,105 @@ std::vector<float> NeuralNetwork::apply( const std::vector<float> &input )
 	return current_activation;
 }
 
-void NeuralNetwork::apply_and_save(
+NeuralNetwork::BackPropagationData NeuralNetwork::construct_empty_backprop_data()
+{
+	NeuralNetwork::BackPropagationData data;
+	data.reserve(layers.size());
+
+	for(size_t l = 0; l < layers.size(); ++l)
+	{
+		uint32_t previous_size = (l == 0)? input_size: layers[l-1].neurons.size();
+
+		NeuralNetwork::BackPropagationLayerData layer_data;
+		layer_data.reserve(layers[l].neurons.size());
+
+		// Initialises each neuron with random weights and bias
+		for(uint32_t i = 0; i < layers[l].neurons.size(); ++i)
+		{
+			NeuralNetwork::BackPropagationNeuronData neuron_data(previous_size);
+			layer_data.push_back(neuron_data);
+		}
+
+		data.push_back(layer_data);
+	}
+
+	return std::move(data);
+}
+
+std::vector<float> NeuralNetwork::apply_and_save(
 	const std::vector<float> &input,
 	NeuralNetwork::BackPropagationData &data )
 {
-	
+	// Calculate the successive layer activations
+	std::vector<float> current_activation = input;
+
+	for(size_t layer_id = 0; layer_id < layers.size(); ++layer_id)
+	{
+		// Apply the layer jute like the "apply function"
+		current_activation = apply_layer(input, layers[layer_id]);
+
+		// saves it in "data"
+		for(size_t i = 0; i < current_activation.size(); ++i)
+		{
+			data[layer_id][i].activation = current_activation[i];
+			current_activation[i] = apply_function(current_activation[i], layers[layer_id].function);
+			data[layer_id][i].output = current_activation[i];
+		}
+	}
+
+	// Apply the softmax function for the last output
+	assert(current_activation.size() == data[layers.size()-1].size());
+	float exp_total = 0.0f;
+	for(size_t i = 0; i < current_activation.size(); ++i)
+	{
+		auto &neuron = data[layers.size()-1][i];
+		neuron.output /= exp(neuron.activation);
+		exp_total += neuron.activation;
+	}
+
+	for(size_t i = 0; i < current_activation.size(); ++i)
+	{
+		data[layers.size()-1][i].output /= exp_total;
+	}
+
+	return current_activation;
 }
 
-void NeuralNetwork::train( const std::vector<Example> &examples )
+void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_count, float max_time_seconds )
 {
+	// Randomize the examples
 
+	// Prepare the threads
+
+	auto backprop_data = calculate_gradient(examples[0]);
+
+	auto &[a,b] = examples[0];
+
+	auto output = apply(a);
+
+	std::cout << "break" << std::endl;
 }
 
 // TODO: redo the calculation; take softmax into account; fill the apply_and_save function; implement the save_to_disk function
 NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Example &example)
 {
-	NeuralNetwork::BackPropagationData backpropagation_data;
+	auto backpropagation_data = construct_empty_backprop_data();
 	const auto &[input, expected_output] = example;
 
 	// Step 1: apply the network to the example
-	apply_and_save(input, backpropagation_data);
+	auto output = apply_and_save(input, backpropagation_data);
 
 	// Step 2: calculate the derivate of the error over the output neurons
 	auto &layer_data = backpropagation_data[layers.size()-1];
 	for(size_t i = 0; i < expected_output.size(); ++i)
 	{
-		layer_data[i].d_err = -2*(expected_output[i] - layer_data[i].output);
+		float d_err = 0.0f;
+		for(size_t k = 0; k < expected_output.size(); ++k)
+		{
+			d_err += -(expected_output[k] / layer_data[k].output) * ((i == k ? output[i]: 0.0f) + output[i]*output[k]);
+		}
+
+		layer_data[i].d_err = d_err;
 	}
 
 	// Step 3: for each layer, calculate the derivate of the error over the weights and biases and then calculate \nabla_i^(l-1) and repeate reaching the first layer
@@ -207,6 +286,7 @@ NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Examp
 
 void NeuralNetwork::construct(
 	uint32_t input_size,
+	uint32_t output_size,
 	const std::vector<LayerDescription> &layers_desc,
 	bool random )
 {
@@ -215,15 +295,17 @@ void NeuralNetwork::construct(
 
 	auto generate_function = [&]() { return random ? distribution(random_engine): 0.0f; };
 
-	// Initialises the layers with null weights and biases
-	for(size_t i = 0; i < layers_desc.size(); ++i)
+	auto full_layer_desc = layers_desc;
+	full_layer_desc.emplace_back(LayerDescription(Function::IDENTITY, output_size));
+
+	for(size_t i = 0; i < full_layer_desc.size(); ++i)
 	{
-		uint32_t previous_size = (i == 0)? input_size: layers_desc[i-1].size;
+		uint32_t previous_size = (i == 0)? input_size: full_layer_desc[i-1].size;
 		std::vector<Neuron> neurons;
-		neurons.reserve(layers_desc[i].size);
+		neurons.reserve(full_layer_desc[i].size);
 
 		// Initialises each neuron with random weights and bias
-		for(uint32_t j = 0; j < layers_desc[i].size; ++j)
+		for(uint32_t j = 0; j < full_layer_desc[i].size; ++j)
 		{
 			std::vector<float> weights(previous_size, 0.0f);
 			std::generate_n(
@@ -234,19 +316,19 @@ void NeuralNetwork::construct(
 			neurons.emplace_back(weights, generate_function());
 		}
 
-		layers.emplace_back(layers_desc[i].function, neurons );
+		layers.emplace_back(full_layer_desc[i].function, neurons );
 	}
 
-	output_size = layers_desc.rbegin()->size;
+	output_size = full_layer_desc.rbegin()->size;
 }
 
 std::vector<float> NeuralNetwork::apply_layer( const std::vector<float> &input, const NeuralNetwork::Layer &layer )
 {
 	std::vector<float> output(layer.neurons.size(), 0.0f);
-	
-	for(size_t neuron_id = 0; neuron_id < input.size(); ++neuron_id)
+
+	for(size_t neuron_id = 0; neuron_id < layer.neurons.size(); ++neuron_id)
 	{
-		output[neuron_id] = neuron_activation(input, layer.function, layer.neurons[neuron_id]);
+		output[neuron_id] = neuron_activation(input, layer.neurons[neuron_id]);
 	}
 
 	return output;
@@ -254,7 +336,6 @@ std::vector<float> NeuralNetwork::apply_layer( const std::vector<float> &input, 
 
 float NeuralNetwork::neuron_activation( 
 	const std::vector<float> &input,
-	NeuralNetwork::Function function,
 	const NeuralNetwork::Neuron &neuron
 )
 {
@@ -266,7 +347,7 @@ float NeuralNetwork::neuron_activation(
 	}
 
 	// Then pass it to the non-linear function of the layer
-	return apply_function(result, function);
+	return result;
 }
 
 float NeuralNetwork::apply_function( float input, NeuralNetwork::Function function )

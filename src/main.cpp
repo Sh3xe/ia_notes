@@ -32,30 +32,28 @@ int main()
 
 	auto test_images = load_images("../dataset/t10k-images.idx3-ubyte");
 	auto test_labels = load_labels("../dataset/t10k-labels.idx1-ubyte");
-	
+
 	// Creates a neural network
-	NeuralNetwork network(27*27, {
+	NeuralNetwork network(27*27, 10, {
 		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16),
-		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16),
-		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 10)
+		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16)
 	});
 	
 	// Converts the training data to float vectors
 	std::vector<NeuralNetwork::Example> examples;
 	for(size_t i = 0; i < test_images.size(); ++i)
 	{
-		std::vector<float> answer(10, 1.0f);
+		std::vector<float> answer(10, 0.0f);
 		answer[(size_t)test_labels[i]] = 1.0f;
 		examples.emplace_back(std::make_pair(test_images[i].convert_to_01_vector(), answer));
 	}
 
 	// Train the neural network
-	// network.train(examples);
+	// auto answer = network.apply(examples[0].first);
+	network.train(examples, 4, 60.0f);
 
 	// Saves the current weights and biases to disk
-	// network.save("../models/numbers.txt");
-
-	
+	network.save("../models/numbers.txt");
 
 	return 0;
 }
