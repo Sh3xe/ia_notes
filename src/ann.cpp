@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include "utils.hpp"
 
 NeuralNetwork::NeuralNetwork(
 	uint32_t input_size,
@@ -212,22 +213,59 @@ std::vector<float> NeuralNetwork::apply_and_save(
 	return current_activation;
 }
 
-void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_count, float max_time_seconds )
+void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_count, size_t max_iteration )
 {
+	const float constant = 1.0f / (float)(examples.size());
+
 	// Randomize the examples
+	auto permutation = generate_permutation(examples.size());
+	size_t current_example = 0;
 
-	// Prepare the threads
+	// Until a max iteration range
+	for(size_t i = 0; i < max_iteration; ++i)
+	{
+		// Calculate the mean of the gradient over a batch examples
+		auto mean_backprop = construct_empty_backprop_data();
+		
+		for(size_t k = 0; k < 100; ++k)
+		{
+			// Gradient for a single example
+			auto backprop_data = calculate_gradient(examples[current_example]);
 
-	auto backprop_data = calculate_gradient(examples[0]);
+			// Copy into "mean_backprop"
+			for(size_t bpl = 0; bpl < backprop_data.size(); ++bpl)
+			{
+				for(size_t bpn = 0; bpn < backprop_data[bpl].size(); ++bpn)
+				{
+					auto &mean_n = mean_backprop[bpl][bpn];
+					auto &n = backprop_data[bpl][bpn];
+					mean_n.d_bias += n.d_bias;
+					for(size_t w = 0; w < mean_n.d_weights.size(); ++w)
+					{
+						mean_n.d_weights[w] += n.d_weights[w];
+					}
+				}
+			}
+		}
 
-	auto &[a,b] = examples[0];
+		// Gradient descent with the delta rule using the constant defined at the beginning of the function
+		for(size_t bpl = 0; bpl < mean_backprop.size(); ++bpl)
+		{
+			for(size_t bpn = 0; bpn < mean_backprop[bpl].size(); ++bpn)
+			{
+				auto &mean_n = mean_backprop[bpl][bpn];
+				auto &n = layers[bpl].neurons[bpn];
+				n.bias += constant * mean_n.d_bias;
 
-	auto output = apply(a);
-
-	std::cout << "break" << std::endl;
+				for(size_t w = 0; w < mean_n.d_weights.size(); ++w)
+				{
+					n.weights[w] += constant * mean_n.d_weights[w];
+				}
+			}
+		}
+	}
 }
 
-// TODO: redo the calculation; take softmax into account; fill the apply_and_save function; implement the save_to_disk function
 NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Example &example)
 {
 	auto backpropagation_data = construct_empty_backprop_data();

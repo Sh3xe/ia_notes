@@ -1,7 +1,7 @@
 #include "img_data.hpp"
 #include <fstream>
 
-std::vector<float> Image::convert_to_01_vector()
+std::vector<float> Image::convert_to_01_vector() const
 {
 	std::vector<float> vec;
 	vec.reserve(width*height);

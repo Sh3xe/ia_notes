@@ -66,7 +66,7 @@ public:
 	 * 
 	 * @param examples 
 	 */
-	void train( const std::vector<Example> &examples, size_t thread_count, float max_time_seconds  = 100.0f);
+	void train( const std::vector<Example> &examples, size_t thread_count, size_t max_iteration);
 
 private:
 	struct Neuron
