@@ -78,7 +78,7 @@ void train_network(
 	}
 
 	// Train the neural network
-	network.train(examples, 4, 10000);
+	network.train(examples, 4, 100);
 
 	// Saves the current weights and biases to disk
 	network.save("../models/numbers.txt");
