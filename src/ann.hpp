@@ -74,6 +74,7 @@ private:
 		Neuron() {}
 		Neuron(const std::vector<float> &weights, float bias):
 			weights(weights), bias(bias) {}
+			
 		std::vector<float> weights;
 		float bias;
 	};
@@ -82,6 +83,7 @@ private:
 	{
 		Layer(NeuralNetwork::Function function, const std::vector<Neuron> &neurons):
 			function(function), neurons(neurons) {}
+
 		NeuralNetwork::Function function;
 		std::vector<Neuron> neurons;
 	};

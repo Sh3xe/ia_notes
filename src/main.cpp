@@ -29,8 +29,6 @@ float test_knn(
 float test_ann(
 	size_t sample_size,
 	size_t threads_count,
-	const std::vector<Image> &training_images,
-	const std::vector<uint8_t> &training_labels,
 	const std::vector<Image> &test_images,
 	const std::vector<uint8_t> &test_labels )
 {
@@ -39,7 +37,7 @@ float test_ann(
 		NeuralNetwork::LayerDescription(NeuralNetwork::Function::RELU, 16)
 	});
 
-	network.load("../models/numbers.txt");
+	network.load("../models/numbers_10000k.txt");
 
 	size_t good_guess = 0;
 	for( size_t i = 0; i < sample_size; ++i )
@@ -78,10 +76,10 @@ void train_network(
 	}
 
 	// Train the neural network
-	network.train(examples, 4, 100);
+	network.train(examples, 4, 10000);
 
 	// Saves the current weights and biases to disk
-	network.save("../models/numbers.txt");
+	network.save("../models/numbers_10000k.txt");
 }
 
 int main()
@@ -93,6 +91,8 @@ int main()
 	auto test_images = load_images("../dataset/t10k-images.idx3-ubyte");
 	auto test_labels = load_labels("../dataset/t10k-labels.idx1-ubyte");
 
-	train_network(training_images, training_labels);
+	// train_network(training_images, training_labels);
+	auto response = test_ann(1000, 1, test_images, test_labels);
+	std::cout << response * 100 << "%\n";
 	return 0;
 }

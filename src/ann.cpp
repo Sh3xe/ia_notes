@@ -83,6 +83,98 @@ NeuralNetwork::Function NeuralNetwork::function_from_name(const std::string &nam
 	return NeuralNetwork::Function::IDENTITY;
 }
 
+void NeuralNetwork::clear()
+{
+	layers.clear();
+	input_size = 0;
+	output_size = 0;
+}
+
+bool NeuralNetwork::save( const std::string &path )
+{
+	std::fstream out_file {path, std::ios::out};
+
+	if( !out_file )
+	{
+		return false;
+	}
+
+	// Write the data of the model in ASCII format
+	out_file << layers.size() << " " << input_size << " ";
+
+	for(const auto &layer: layers)
+	{
+		out_file << layer.neurons.size() << " " << function_name(layer.function) << " ";
+
+		for(const auto &neuron: layer.neurons)
+		{
+			out_file << neuron.weights.size() << " " << neuron.bias << " ";
+			for(float weight: neuron.weights)
+			{
+				out_file << weight << " ";
+			}
+		}
+	}
+
+	out_file.close();
+	return true;
+}
+
+std::vector<float> NeuralNetwork::apply( const std::vector<float> &input )
+{
+	// Calculate the successive layer activations
+	std::vector<float> current_activation = input;
+
+	for(const auto &layer: layers)
+	{
+		current_activation = apply_layer(input, layer);
+
+		for(auto &act: current_activation)
+			act = apply_function(act, layer.function);
+	}
+
+	// Apply the softmax function for the last output
+	float exp_total = 0.0f;
+	for(auto &activation: current_activation)
+	{
+		activation = exp(activation);
+		exp_total += activation;
+	}
+
+	for(auto &activation: current_activation)
+	{
+		activation /= exp_total;
+	}
+
+	// Return the final output
+	return current_activation;
+}
+
+NeuralNetwork::BackPropagationData NeuralNetwork::construct_empty_backprop_data()
+{
+	NeuralNetwork::BackPropagationData data;
+	data.reserve(layers.size());
+
+	for(size_t l = 0; l < layers.size(); ++l)
+	{
+		uint32_t previous_size = (l == 0)? input_size: layers[l-1].neurons.size();
+
+		NeuralNetwork::BackPropagationLayerData layer_data;
+		layer_data.reserve(layers[l].neurons.size());
+
+		// Initialises each neuron with random weights and bias
+		for(uint32_t i = 0; i < layers[l].neurons.size(); ++i)
+		{
+			NeuralNetwork::BackPropagationNeuronData neuron_data(previous_size);
+			layer_data.push_back(neuron_data);
+		}
+
+		data.push_back(layer_data);
+	}
+
+	return std::move(data);
+}
+
 std::vector<float> NeuralNetwork::apply_and_save(
 	const std::vector<float> &input,
 	NeuralNetwork::BackPropagationData &data )
@@ -140,6 +232,7 @@ void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_c
 		{
 			// Gradient for a single example
 			auto backprop_data = calculate_gradient(examples[current_example]);
+			current_example = (current_example+1) % examples.size();
 
 			// Copy into "mean_backprop"
 			for(size_t bpl = 0; bpl < backprop_data.size(); ++bpl)
@@ -190,10 +283,10 @@ NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Examp
 		float d_err = 0.0f;
 		for(size_t k = 0; k < expected_output.size(); ++k)
 		{
-			if(fabs(expected_output[k]) < 0.01)
+			if(fabs(expected_output[k]) < 0.01f)
 				continue;
 			
-			if(fabs(layer_data[k].output) < 0.01)
+			if(fabs(layer_data[k].output) < 0.01f)
 				layer_data[k].output = 0.01f;
 			
 			d_err += -(expected_output[k] / layer_data[k].output) * ((i == k ? output[i]: 0.0f) + output[i]*output[k]);
@@ -300,7 +393,6 @@ float NeuralNetwork::neuron_activation(
 	}
 
 	// Then pass it to the non-linear function of the layer
-	assert(!std::isnan(result));
 	return result;
 }
 
