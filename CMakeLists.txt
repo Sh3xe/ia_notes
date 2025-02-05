@@ -11,4 +11,5 @@ add_executable( ia_framework
 	src/img_data.cpp src/img_data.hpp
 	src/knn.cpp src/knn.hpp
 	src/utils.hpp src/utils.cpp
+	src/compute_graph.cpp
 )

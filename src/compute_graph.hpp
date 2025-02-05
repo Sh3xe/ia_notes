@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <stack>
+#include <unordered_set>
 
 namespace CG 
 {
@@ -38,7 +40,10 @@ public:
 	friend std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
 	friend std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
 	friend std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg);
-
+	friend void dfs(
+	const std::shared_ptr<CG>& node,
+	std::unordered_set<std::shared_ptr<CG>>& visited,
+	std::stack<std::shared_ptr<CG>>& order );
 private:
 	void backward();
 

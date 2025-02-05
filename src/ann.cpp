@@ -202,8 +202,8 @@ std::vector<float> NeuralNetwork::apply_and_save(
 	for(size_t i = 0; i < current_activation.size(); ++i)
 	{
 		auto &neuron = data[layers.size()-1][i];
-		neuron.output /= exp(neuron.activation);
-		exp_total += neuron.activation;
+		neuron.output = exp(neuron.output);
+		exp_total += neuron.output;
 	}
 
 	for(size_t i = 0; i < current_activation.size(); ++i)
@@ -216,7 +216,7 @@ std::vector<float> NeuralNetwork::apply_and_save(
 
 void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_count, size_t max_iteration )
 {
-	const float constant = 1.0f / (float)(examples.size());
+	const float constant = 1e-2 / (float)examples.size();
 
 	// Randomize the examples
 	auto permutation = generate_permutation(examples.size());
@@ -228,7 +228,7 @@ void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_c
 		// Calculate the mean of the gradient over a batch examples
 		auto mean_backprop = construct_empty_backprop_data();
 		
-		for(size_t k = 0; k < 100; ++k)
+		for(size_t k = 0; k < 300; ++k)
 		{
 			// Gradient for a single example
 			auto backprop_data = calculate_gradient(examples[current_example]);
@@ -289,7 +289,11 @@ NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Examp
 			if(fabs(layer_data[k].output) < 0.01f)
 				layer_data[k].output = 0.01f;
 			
-			d_err += -(expected_output[k] / layer_data[k].output) * ((i == k ? output[i]: 0.0f) + output[i]*output[k]);
+			d_err += output[i]*output[k];
+			if(i == k)
+			{
+				d_err -= (expected_output[k] / layer_data[k].output) * output[i];
+			}
 		}
 
 		layer_data[i].d_err = d_err;

@@ -31,21 +31,44 @@ void CG::zero_grad()
 		child->zero_grad();
 }
 
-std::vector<std::shared_ptr<CG>> CG::topological_sort()
+void dfs(
+	const std::shared_ptr<CG>& node,
+	std::unordered_set<std::shared_ptr<CG>>& visited,
+	std::stack<std::shared_ptr<CG>>& order )
 {
-	std::vector<std::shared_ptr<CG>> res = m_children;
-	
-	// for(uint32_t i = 0; i < res.size(); i++)
-	// {
-	// 	for(auto child: res[i]->m_children)
-	// 		res.push_back(child);
-	// }
-
-	assert(false && "not implemented");
-
-	return res;
+	visited.insert(node);
+	for (const auto& child : node->m_children)
+	{
+		if (visited.find(child) == visited.end())
+		{
+			dfs(child, visited, order);
+		}
+	}
+	order.push(node);
 }
 
+std::vector<std::shared_ptr<CG>> CG::topological_sort()
+{
+	std::unordered_set<std::shared_ptr<CG>> visited;
+	std::stack<std::shared_ptr<CG>> order;
+
+	for (const auto& node : m_children)
+	{
+		if (visited.find(node) == visited.end())
+		{
+			dfs(node, visited, order);
+		}
+	}
+
+	std::vector<std::shared_ptr<CG>> sprted_order;
+	while (!order.empty())
+	{
+		sprted_order.push_back(order.top());
+		order.pop();
+	}
+
+	return sprted_order;
+}
 
 void CG::backward()
 {
