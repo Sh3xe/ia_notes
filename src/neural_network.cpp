@@ -7,10 +7,10 @@
 #include <iostream>
 #include "utils.hpp"
 
-NeuralNetwork::NeuralNetwork(
+NN::NN(
 	uint32_t input_size,
 	uint32_t output_size,
-	const std::vector<LayerDescription> &layers_desc ):
+	const std::vector<LayerDesc> &layers_desc ):
 	input_size(input_size),
 	output_size(output_size)
 {
@@ -19,7 +19,7 @@ NeuralNetwork::NeuralNetwork(
 	construct(input_size, output_size, layers_desc, true);
 }
 
-bool NeuralNetwork::load( const std::string &path )
+bool NN::load( const std::string &path )
 {
 	std::fstream file {path, std::ios::in};
 
@@ -41,7 +41,7 @@ bool NeuralNetwork::load( const std::string &path )
 		std::string func;
 		file >> neuron_count >> func; 
 
-		std::vector<NeuralNetwork::Neuron> neurons;
+		std::vector<NN::Neuron> neurons;
 
 		neurons.reserve(neuron_count);
 
@@ -74,23 +74,23 @@ bool NeuralNetwork::load( const std::string &path )
 	return true;
 }
 
-NeuralNetwork::Function NeuralNetwork::function_from_name(const std::string &name)
+NN::Func NN::function_from_name(const std::string &name)
 {
 	if(name == "RELU")
-		return NeuralNetwork::Function::RELU;
+		return NN::Func::RELU;
 	else if(name == "SIGMOID")
-		return NeuralNetwork::Function::SIGMOID;
-	return NeuralNetwork::Function::IDENTITY;
+		return NN::Func::SIGMOID;
+	return NN::Func::IDENTITY;
 }
 
-void NeuralNetwork::clear()
+void NN::clear()
 {
 	layers.clear();
 	input_size = 0;
 	output_size = 0;
 }
 
-bool NeuralNetwork::save( const std::string &path )
+bool NN::save( const std::string &path )
 {
 	std::fstream out_file {path, std::ios::out};
 
@@ -120,7 +120,7 @@ bool NeuralNetwork::save( const std::string &path )
 	return true;
 }
 
-std::vector<float> NeuralNetwork::apply( const std::vector<float> &input )
+std::vector<float> NN::apply( const std::vector<float> &input )
 {
 	// Calculate the successive layer activations
 	std::vector<float> current_activation = input;
@@ -150,22 +150,22 @@ std::vector<float> NeuralNetwork::apply( const std::vector<float> &input )
 	return current_activation;
 }
 
-NeuralNetwork::BackPropagationData NeuralNetwork::construct_empty_backprop_data()
+NN::BackPropagationData NN::construct_empty_backprop_data()
 {
-	NeuralNetwork::BackPropagationData data;
+	NN::BackPropagationData data;
 	data.reserve(layers.size());
 
 	for(size_t l = 0; l < layers.size(); ++l)
 	{
 		uint32_t previous_size = (l == 0)? input_size: layers[l-1].neurons.size();
 
-		NeuralNetwork::BackPropagationLayerData layer_data;
+		NN::BackPropagationLayerData layer_data;
 		layer_data.reserve(layers[l].neurons.size());
 
 		// Initialises each neuron with random weights and bias
 		for(uint32_t i = 0; i < layers[l].neurons.size(); ++i)
 		{
-			NeuralNetwork::BackPropagationNeuronData neuron_data(previous_size);
+			NN::BackPropagationNeuronData neuron_data(previous_size);
 			layer_data.push_back(neuron_data);
 		}
 
@@ -175,9 +175,9 @@ NeuralNetwork::BackPropagationData NeuralNetwork::construct_empty_backprop_data(
 	return std::move(data);
 }
 
-std::vector<float> NeuralNetwork::apply_and_save(
+std::vector<float> NN::apply_and_save(
 	const std::vector<float> &input,
-	NeuralNetwork::BackPropagationData &data )
+	NN::BackPropagationData &data )
 {
 	// Calculate the successive layer activations
 	std::vector<float> current_activation = input;
@@ -214,7 +214,7 @@ std::vector<float> NeuralNetwork::apply_and_save(
 	return current_activation;
 }
 
-void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_count, size_t max_iteration )
+void NN::train( const std::vector<Example> &examples, size_t thread_count, size_t max_iteration )
 {
 	const float constant = 1e-2 / (float)examples.size();
 
@@ -268,7 +268,7 @@ void NeuralNetwork::train( const std::vector<Example> &examples, size_t thread_c
 	}
 }
 
-NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Example &example)
+NN::BackPropagationData NN::calculate_gradient(const Example &example)
 {
 	auto backpropagation_data = construct_empty_backprop_data();
 	const auto &[input, expected_output] = example;
@@ -334,10 +334,10 @@ NeuralNetwork::BackPropagationData NeuralNetwork::calculate_gradient(const Examp
 	return backpropagation_data;
 }
 
-void NeuralNetwork::construct(
+void NN::construct(
 	uint32_t input_size,
 	uint32_t output_size,
-	const std::vector<LayerDescription> &layers_desc,
+	const std::vector<LayerDesc> &layers_desc,
 	bool random )
 {
 	std::mt19937 random_engine;
@@ -346,7 +346,7 @@ void NeuralNetwork::construct(
 	auto generate_function = [&]() { return random ? distribution(random_engine): 0.0f; };
 
 	auto full_layer_desc = layers_desc;
-	full_layer_desc.emplace_back(LayerDescription(Function::IDENTITY, output_size));
+	full_layer_desc.emplace_back(LayerDesc(Func::IDENTITY, output_size));
 
 	for(size_t i = 0; i < full_layer_desc.size(); ++i)
 	{
@@ -372,7 +372,7 @@ void NeuralNetwork::construct(
 	output_size = full_layer_desc.rbegin()->size;
 }
 
-std::vector<float> NeuralNetwork::apply_layer( const std::vector<float> &input, const NeuralNetwork::Layer &layer )
+std::vector<float> NN::apply_layer( const std::vector<float> &input, const NN::Layer &layer )
 {
 	std::vector<float> output(layer.neurons.size(), 0.0f);
 
@@ -384,9 +384,9 @@ std::vector<float> NeuralNetwork::apply_layer( const std::vector<float> &input, 
 	return output;
 }
 
-float NeuralNetwork::neuron_activation( 
+float NN::neuron_activation( 
 	const std::vector<float> &input,
-	const NeuralNetwork::Neuron &neuron
+	const NN::Neuron &neuron
 )
 {
 	// Calculate the weighted sum of the input
@@ -400,46 +400,46 @@ float NeuralNetwork::neuron_activation(
 	return result;
 }
 
-float NeuralNetwork::apply_function( float input, NeuralNetwork::Function function )
+float NN::apply_function( float input, NN::Func function )
 {
 	switch( function ) {
-		case NeuralNetwork::Function::RELU:
+		case NN::Func::RELU:
 			return (input < 0) ? 0.0f: input;
-		case NeuralNetwork::Function::SIGMOID:
+		case NN::Func::SIGMOID:
 			return 1.0f / (1.0f + expf(-input));
-		case NeuralNetwork::Function::IDENTITY:
+		case NN::Func::IDENTITY:
 			return input;
 		default:
 			return input;
 	}
 }
 
-std::string NeuralNetwork::function_name( NeuralNetwork::Function function )
+std::string NN::function_name( NN::Func function )
 {
 	switch( function ) {
-		case NeuralNetwork::Function::RELU:
+		case NN::Func::RELU:
 			return "RELU";
-		case NeuralNetwork::Function::SIGMOID:
+		case NN::Func::SIGMOID:
 			return "SIGMOID";
-		case NeuralNetwork::Function::IDENTITY:
+		case NN::Func::IDENTITY:
 			return "IDENTITY";
 		default:
 			return "";
 	}
 }
 
-float NeuralNetwork::apply_derivate( float input, NeuralNetwork::Function function )
+float NN::apply_derivate( float input, NN::Func function )
 {
 	switch( function ) {
-		case NeuralNetwork::Function::RELU:
+		case NN::Func::RELU:
 			return (input < 0) ? 0.0f: 1.0f;
-		case NeuralNetwork::Function::SIGMOID:
+		case NN::Func::SIGMOID:
 		{
 			float exp_minus_x = expf(-input);
 			float denom = (1.0f + exp_minus_x);
 			return exp_minus_x / (denom*denom);
 		}
-		case NeuralNetwork::Function::IDENTITY:
+		case NN::Func::IDENTITY:
 			return 1.0f;
 		default:
 			return 0.0f;

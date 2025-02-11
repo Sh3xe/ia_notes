@@ -14,6 +14,15 @@ std::vector<float> Image::convert_to_01_vector() const
 	return std::move(vec);
 }
 
+std::vector<double> one_hot_encode( uint8_t digit )
+{
+	std::vector<double> one_hot_encoding(10, 0.0);
+
+	one_hot_encoding[(size_t)digit] = 1.0;
+
+	return one_hot_encoding;
+}
+
 uint32_t endian_swap( uint32_t num )
 {
 	return ((num & 0xff000000) >> 24) | ((num & 0x00ff0000) >> 8) | ((num & 0x0000ff00) << 8) | (num << 24);

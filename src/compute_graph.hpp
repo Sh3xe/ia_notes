@@ -61,6 +61,8 @@ private:
 	double m_diff {0.0};
 };
 
+using Value = std::shared_ptr<CG>;
+
 std::shared_ptr<CG> value(double val);
 std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
 std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);

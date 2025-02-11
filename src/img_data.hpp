@@ -33,3 +33,11 @@ std::vector<Image> load_images( const std::string &file_path );
  * @return std::vector<uint8_t> 
  */
 std::vector<uint8_t> load_labels( const std::string &file_path );
+
+/**
+ * @brief Given a digit between 0 and 9, one hot encode into a vector of 10 element between 0.0 and 1.0
+ * 
+ * @param digit 
+ * @return std::vector<double> 
+ */
+std::vector<double> one_hot_encode( uint8_t digit );
