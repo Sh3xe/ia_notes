@@ -1,8 +1,11 @@
 #pragma once
+
 #include <memory>
 #include <vector>
 #include <stack>
 #include <unordered_set>
+
+namespace NN { class Optimizer; }
 
 namespace CG 
 {
@@ -35,29 +38,7 @@ public:
 	// Zero out all of the gradients starting from the current node
 	void zero_grad();
 
-	friend std::shared_ptr<CG> value(double val);
-	friend std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
-	friend std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
-	friend std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
-	friend std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg);
-
-	friend void dfs(
-		const std::shared_ptr<CG>& node,
-		std::unordered_set<std::shared_ptr<CG>>& visited,
-		std::stack<std::shared_ptr<CG>>& order
-	);
-
-	friend std::shared_ptr<CG> cross_enthropy(
-		uint32_t y_real,
-		const std::vector<std::shared_ptr<CG>> &logits
-	);
-	
-	friend const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input );
-
-private:
 	void backward();
-
-	std::vector<std::shared_ptr<CG>> topological_sort();
 
 	// List of the inputs
 	std::vector<std::shared_ptr<CG>> m_children;
@@ -72,23 +53,26 @@ private:
 	double m_diff {0.0};
 };
 
+
 using Value = std::shared_ptr<CG>;
 
-std::shared_ptr<CG> value(double val);
+Value value(double val);
 
-std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+Value operator+(const Value &left, const Value &right);
 
-std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+Value operator-(const Value &left, const Value &right);
 
-std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+Value operator*(const Value &left, const Value &right);
 
-std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg);
+Value relu(const Value &cg);
 
-std::shared_ptr<CG> cross_enthropy(
-	const std::vector<std::shared_ptr<CG>> &y_real,
-	const std::vector<std::shared_ptr<CG>> &logits
+Value cross_entropy(
+	uint32_t y_real,
+	const std::vector<Value> &logits
 );
 
-const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input );
+const std::vector<Value> softmax( const std::vector<Value> &input );
+
+Value list_add(const std::vector<Value> &input);
 
 } // CG

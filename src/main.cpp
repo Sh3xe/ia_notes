@@ -18,14 +18,14 @@ std::vector<std::vector<double>> fetch_mnist_train_images()
 	return converted_images;
 }
 
-std::vector<std::vector<double>> fetch_mnist_train_labels()
+std::vector<uint32_t> fetch_mnist_train_labels()
 {
 	auto labels = load_labels( "../dataset/train-labels.idx3-ubyte" );
-	std::vector<std::vector<double>> converted_labels;
+	std::vector<uint32_t> converted_labels;
 
 	for(const auto &label: labels)
 	{
-		converted_labels.push_back(one_hot_encode(label));
+		converted_labels.push_back(static_cast<uint32_t>(label));
 	}
 
 	return converted_labels;
@@ -33,14 +33,14 @@ std::vector<std::vector<double>> fetch_mnist_train_labels()
 
 void train_and_save_nn()
 {
-	NN neural_net({
-		NN::Linear(28*28, 16),
-		NN::ReLU(),
-		NN::Linear(16, 10),
-		NN::Softmax()
+	NN::NeuralNet neural_net({
+		NN::linear(28*28, 16),
+		NN::relu(),
+		NN::linear(16, 10),
+		NN::softmax()
 	});
 
-	Optimizer optimizer(&neural_net);
+	NN::Optimizer optimizer(neural_net, 0.01);
 
 	auto X_train = fetch_mnist_train_images();
 	auto y_train = fetch_mnist_train_labels();
@@ -61,7 +61,7 @@ void train_and_save_nn()
 				std::vector<CG::Value> logits = neural_net.forward(X_train[index]);
 
 				// Loss function
-				CG::Value loss = CG::cross_entropy(logits, y_train[index]);
+				CG::Value loss = CG::cross_entropy(y_train[index], logits);
 
 				// Gradient calculation
 				loss->backprop();
@@ -75,7 +75,7 @@ void train_and_save_nn()
 		}
 	}
 
-	neural_net.save("models/mnist_v0");
+	// neural_net.save("models/mnist_v0");
 }
 
 int main()

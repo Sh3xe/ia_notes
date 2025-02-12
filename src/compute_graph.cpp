@@ -1,4 +1,5 @@
 #include "compute_graph.hpp"
+#include "utils.hpp"
 
 #include <cmath>
 #include <cassert>
@@ -7,7 +8,7 @@
 namespace CG 
 {
 
-constexpr cross_enthropy_epsilon = 1e-4;
+constexpr double cross_entropy_epsilon = 1e-4;
 
 CG::CG(double value):
 	m_value(value)
@@ -16,7 +17,7 @@ CG::CG(double value):
 
 void CG::backprop()
 {
-	auto sort = topological_sort();
+	auto sort = topological_sort(m_children);
 	m_diff = 1.0;
 	backward();
 
@@ -31,45 +32,6 @@ void CG::zero_grad()
 	m_diff = 0;
 	for(auto &child: m_children)
 		child->zero_grad();
-}
-
-void dfs(
-	const std::shared_ptr<CG>& node,
-	std::unordered_set<std::shared_ptr<CG>>& visited,
-	std::stack<std::shared_ptr<CG>>& order )
-{
-	visited.insert(node);
-	for (const auto& child : node->m_children)
-	{
-		if (visited.find(child) == visited.end())
-		{
-			dfs(child, visited, order);
-		}
-	}
-	order.push(node);
-}
-
-std::vector<std::shared_ptr<CG>> CG::topological_sort()
-{
-	std::unordered_set<std::shared_ptr<CG>> visited;
-	std::stack<std::shared_ptr<CG>> order;
-
-	for (const auto& node : m_children)
-	{
-		if (visited.find(node) == visited.end())
-		{
-			dfs(node, visited, order);
-		}
-	}
-
-	std::vector<std::shared_ptr<CG>> sprted_order;
-	while (!order.empty())
-	{
-		sprted_order.push_back(order.top());
-		order.pop();
-	}
-
-	return sprted_order;
 }
 
 void CG::backward()
@@ -104,7 +66,7 @@ void CG::backward()
 	case Op::LEAF:
 		break;
 	case Op::CROSS_ENTHROPY:
-		m_children[m_input_index]->m_diff -= 1 / (m_value + cross_enthropy_epsilon);
+		m_children[m_input_index]->m_diff -= 1 / (m_value + cross_entropy_epsilon);
 		break;
 	default: 
 		assert(false);
@@ -112,12 +74,12 @@ void CG::backward()
 	}
 }
 
-std::shared_ptr<CG> value(double val)
+Value value(double val)
 {
 	return std::make_shared<CG>(val);
 }
 
-std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right)
+Value operator+(const Value &left, const Value &right)
 {
 	auto ptr = std::make_shared<CG>(0.0);
 
@@ -129,7 +91,20 @@ std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared
 	return ptr;
 }
 
-std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right)
+Value list_add(const std::vector<Value> &input)
+{
+	auto ptr = std::make_shared<CG>(0.0);
+
+	ptr->m_children = input;
+	ptr->m_op = Op::ADD;
+	ptr->m_value = 0.0;
+	for(const auto &v: input)
+		ptr->m_value += v->value();
+	
+	return ptr;
+}
+
+Value operator-(const Value &left, const Value &right)
 {
 	auto ptr = std::make_shared<CG>(0.0);
 
@@ -141,7 +116,7 @@ std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared
 	return ptr;
 }
 
-std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right)
+Value operator*(const Value &left, const Value &right)
 {
 	auto ptr = std::make_shared<CG>(0.0);
 
@@ -153,7 +128,7 @@ std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared
 	return ptr;
 }
 
-std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg)
+Value relu(const Value &cg)
 {
 	auto ptr = std::make_shared<CG>(0.0);
 
@@ -164,25 +139,25 @@ std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg)
 	return ptr;
 }
 
-std::shared_ptr<CG> cross_enthropy(
+Value cross_entropy(
 	uint32_t y_real,
-	const std::vector<std::shared_ptr<CG>> &logits
+	const std::vector<Value> &logits
 )
 {
 	assert(y_real < logits.size());
-	std::shared_ptr<CG> loss = std::make_shared<CG>(0.0);
+	Value loss = std::make_shared<CG>(0.0);
 
 	loss->m_op = Op::CROSS_ENTHROPY;
 	loss->m_children = logits;
 	loss->m_input_index = y_real;
-	loss->m_value = -log(logits[y_real] + cross_enthropy_epsilon);
+	loss->m_value = -log(logits[y_real]->m_value + cross_entropy_epsilon);
 
 	return loss;
 }
 
-const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input )
+const std::vector<Value> softmax( const std::vector<Value> &input )
 {
-	const std::vector<std::shared_ptr<CG>> ret;
+	std::vector<Value> ret;
 	ret.reserve(input.size());
 
 	double exp_sum = 0.0;
@@ -202,5 +177,4 @@ const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_pt
 	return ret;
 }
 
-
-} // 
+} // namespace CG

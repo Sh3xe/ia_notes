@@ -11,7 +11,7 @@ struct Image
 	{
 	}
 
-	std::vector<float> convert_to_01_vector() const;
+	std::vector<double> convert_to_01_vector() const;
 
 	std::vector<uint8_t> data;
 	uint32_t width;

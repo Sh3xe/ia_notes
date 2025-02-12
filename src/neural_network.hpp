@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <initializer_list>
 
+namespace NN
+{
+
 struct Layer
 {
 	enum class Func { SOFTMAX, LINEAR, RELU };
@@ -29,7 +32,16 @@ public:
 
 	std::vector<CG::Value> forward(const std::vector<double> &input);
 
-private:
-	std::vector<Layer> m_architecture;
+	// bool save_weights(const std::string &path);
 	
+	// bool load_weights(const std::string &path);
+	
+	friend class Optimizer;
+private:
+	std::vector<CG::Value> construct_tree();
+
+	std::vector<Layer> m_architecture;
+	std::vector<CG::Value> m_weights;
 };
+
+} // namespace NN

@@ -1,14 +1,14 @@
 #include "img_data.hpp"
 #include <fstream>
 
-std::vector<float> Image::convert_to_01_vector() const
+std::vector<double> Image::convert_to_01_vector() const
 {
-	std::vector<float> vec;
+	std::vector<double> vec;
 	vec.reserve(width*height);
 
 	for(uint32_t i = 0; i < width*height; ++i)
 	{
-		vec.push_back((float)data[i] / 255.0f);
+		vec.push_back((double)data[i] / 255.0f);
 	}
 
 	return std::move(vec);
