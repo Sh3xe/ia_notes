@@ -40,10 +40,20 @@ public:
 	friend std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
 	friend std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
 	friend std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg);
+
 	friend void dfs(
-	const std::shared_ptr<CG>& node,
-	std::unordered_set<std::shared_ptr<CG>>& visited,
-	std::stack<std::shared_ptr<CG>>& order );
+		const std::shared_ptr<CG>& node,
+		std::unordered_set<std::shared_ptr<CG>>& visited,
+		std::stack<std::shared_ptr<CG>>& order
+	);
+
+	friend std::shared_ptr<CG> cross_enthropy(
+		uint32_t y_real,
+		const std::vector<std::shared_ptr<CG>> &logits
+	);
+	
+	friend const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input );
+
 private:
 	void backward();
 
@@ -53,8 +63,9 @@ private:
 	std::vector<std::shared_ptr<CG>> m_children;
 	// Operation performed
 	Op m_op {Op::LEAF};
-	// If the operation is "Softmax", what index of the output of softmax on m_children does this node corresponds to?
-	uint32_t m_softmax_index {0};
+	// If the operation is "Softmax", what index of the output of softmax on m_children does this node corresponds to ?
+	// If the operation is "CrossEntrhopy", what is the index of the correct class ?
+	uint32_t m_input_index {0};
 	// The actual value of the node
 	double m_value {0.0};
 	// The differential of some loss (the called of .backward()) over m_value
@@ -64,9 +75,20 @@ private:
 using Value = std::shared_ptr<CG>;
 
 std::shared_ptr<CG> value(double val);
+
 std::shared_ptr<CG> operator+(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+
 std::shared_ptr<CG> operator-(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+
 std::shared_ptr<CG> operator*(const std::shared_ptr<CG> &left, const std::shared_ptr<CG> &right);
+
 std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg);
+
+std::shared_ptr<CG> cross_enthropy(
+	const std::vector<std::shared_ptr<CG>> &y_real,
+	const std::vector<std::shared_ptr<CG>> &logits
+);
+
+const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input );
 
 } // CG

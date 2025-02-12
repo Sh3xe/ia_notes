@@ -7,6 +7,8 @@
 namespace CG 
 {
 
+constexpr cross_enthropy_epsilon = 1e-4;
+
 CG::CG(double value):
 	m_value(value)
 {
@@ -89,20 +91,20 @@ void CG::backward()
 	case Op::SOFTMAX:
 		for(uint32_t i = 0; i < m_children.size(); ++i)
 		{
-			if( i == m_softmax_index)
+			if( i == m_input_index)
 			{
 				m_children[i]->m_diff += m_value * (1.0- m_value);
 			}
 			else
 			{
-				m_children[i]->m_diff += m_value * m_value * (exp(m_children[i]->value()) / exp(m_children[m_softmax_index]->value()));
+				m_children[i]->m_diff += m_value * m_value * (exp(m_children[i]->value()) / exp(m_children[m_input_index]->value()));
 			}
 		}
 		break;
 	case Op::LEAF:
 		break;
 	case Op::CROSS_ENTHROPY:
-		assert(false && "Not implemented");
+		m_children[m_input_index]->m_diff -= 1 / (m_value + cross_enthropy_epsilon);
 		break;
 	default: 
 		assert(false);
@@ -160,6 +162,44 @@ std::shared_ptr<CG> relu(const std::shared_ptr<CG> &cg)
 	ptr->m_value = cg->value() > 0.0 ? cg->value(): 0.0;
 	
 	return ptr;
+}
+
+std::shared_ptr<CG> cross_enthropy(
+	uint32_t y_real,
+	const std::vector<std::shared_ptr<CG>> &logits
+)
+{
+	assert(y_real < logits.size());
+	std::shared_ptr<CG> loss = std::make_shared<CG>(0.0);
+
+	loss->m_op = Op::CROSS_ENTHROPY;
+	loss->m_children = logits;
+	loss->m_input_index = y_real;
+	loss->m_value = -log(logits[y_real] + cross_enthropy_epsilon);
+
+	return loss;
+}
+
+const std::vector<std::shared_ptr<CG>> softmax( const std::vector<std::shared_ptr<CG>> &input )
+{
+	const std::vector<std::shared_ptr<CG>> ret;
+	ret.reserve(input.size());
+
+	double exp_sum = 0.0;
+	for(const auto &v: input)
+		exp_sum += exp(v->m_value);
+
+	for(size_t i = 0; i < input.size(); ++i)
+	{
+		auto ptr = std::make_shared<CG>(0.0);
+
+		ptr->m_children = input;
+		ptr->m_op = Op::SOFTMAX;
+		ptr->m_input_index = i;
+		ptr->m_value = input[i]->m_value / exp_sum;
+	}
+	
+	return ret;
 }
 
 
