@@ -40,6 +40,8 @@ public:
 
 	void backward();
 
+	void forward();
+
 	// List of the inputs
 	std::vector<std::shared_ptr<CG>> m_children;
 	// Operation performed

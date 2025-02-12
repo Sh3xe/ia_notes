@@ -34,6 +34,45 @@ void CG::zero_grad()
 		child->zero_grad();
 }
 
+void CG::forward()
+{
+	switch(m_op)
+	{
+	case Op::ADD:
+		assert(m_children.size() > 1);
+		for(auto &child: m_children)
+			m_value += child->value();
+		break;
+	case Op::MUL:
+		assert(m_children.size() == 2);
+		m_value += m_children[1]->value() * m_children[0]->value();
+		break;
+	case Op::SUB:
+		assert(m_children.size() == 2);
+		m_value = m_children[0]->value() - m_children[1]->value();
+		break;
+	case Op::SOFTMAX:
+	{
+		float exp_total = 0.0;
+		for(const auto &c: m_children)
+		{
+			exp_total += exp(c->value());
+		}
+
+		m_value = exp(m_children[m_input_index]->m_value) / exp_total;
+		break;
+	}
+	case Op::LEAF:
+		break;
+	case Op::CROSS_ENTHROPY:
+		m_value = -log(m_children[m_input_index]->m_value + cross_entropy_epsilon);
+		break;
+	default: 
+		assert(false);
+		break;
+	}
+}
+
 void CG::backward()
 {
 	switch(m_op)

@@ -12,7 +12,7 @@ Optimizer::Optimizer(const NeuralNet &net, double learning_rate)
 	// Topological is deterministic and for two CG::Value with the same graph,
 	// it will yield the same order. This is how we can pair every weights from
 	// the neural net, with it's loss counterpart
-	m_network_weights = topological_sort(net.m_weights);
+	m_network_weights = topological_sort(net.m_output_weights);
 }
 
 void Optimizer::zero_grad()

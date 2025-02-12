@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdint>
 #include <initializer_list>
+#include <utility>
 
 namespace NN
 {
@@ -38,10 +39,11 @@ public:
 	
 	friend class Optimizer;
 private:
-	std::vector<CG::Value> construct_tree();
+	std::pair<std::vector<CG::Value>, std::vector<CG::Value>> construct_tree(bool random = true);
 
 	std::vector<Layer> m_architecture;
-	std::vector<CG::Value> m_weights;
+	std::vector<CG::Value> m_output_weights;
+	std::vector<CG::Value> m_input_weights;
 };
 
 } // namespace NN
