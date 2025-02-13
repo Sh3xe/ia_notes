@@ -8,9 +8,6 @@
 #include <cmath>
 #include <iostream>
 
-#include <Eigen/Core>
-
-
 int find_prediction(const std::vector<CG::Value> &y_pred )
 {
 	double max_value = y_pred[0]->value();
@@ -30,18 +27,20 @@ int find_prediction(const std::vector<CG::Value> &y_pred )
 
 void train_and_save_nn()
 {
-	int epochs = 1000;
+	int epochs = 10;
 	int batch_size = 32;
 	int test_size = 100;
 	int test_every = 10;
 	int current_test_id = 0;
 
 	NN::NeuralNet neural_net({
-		NN::linear(28*28, 10),
+		NN::linear(28*28, 16),
+		NN::relu(),
+		NN::linear(16, 10),
 		NN::softmax()
 	});
 
-	NN::Optimizer optimizer(neural_net, 0.01, 0.9);
+	NN::Optimizer optimizer(neural_net, 1, 0.9);
 
 	auto [X_train, y_train] = load_mnist_digits_train();
 	auto [X_test, y_test] = load_mnist_digits_test();
@@ -96,6 +95,8 @@ void train_and_save_nn()
 		std::cout << "Accuracy: " << (correct_guess / (double)test_size)*100 << "%" <<std::endl;
 		std::cout << "Gradient L2 norm: " << optimizer.grad_l2_norm() << std::endl;
 	}
+
+	neural_net.save_weights("out.txt");
 }
 
 void test_img()
@@ -109,27 +110,8 @@ void test_img()
 	}
 }
 
-#include <cmath>
-
-void debug_autograd()
-{
-	auto v1 = CG::value(5.0);
-	auto v2 = CG::value(1.0);
-
-	auto sm = CG::softmax({v1,v2});
-
-	auto loss = CG::cross_entropy(1, sm);
-
-	loss->backprop();
-
-	std::cout << loss->value() << " " << loss->diff() << std::endl;
-	std::cout << sm[0]->value() << " " << sm[0]->diff() << std::endl;
-	std::cout << sm[1]->value() << " " << sm[1]->diff() << std::endl;
-	std::cout << v1->value() << " " << v1->diff() << std::endl;
-	std::cout << v2->value() << " " << v2->diff() << std::endl;
-}
-
 int main()
 {
+	train_and_save_nn();
 	return 0;
 }

@@ -33,9 +33,9 @@ public:
 
 	std::vector<CG::Value> forward(const std::vector<double> &input);
 
-	// bool save_weights(const std::string &path);
+	bool save_weights(const std::string &path);
 	
-	// bool load_weights(const std::string &path);
+	bool load_weights(const std::string &path);
 	
 	friend class Optimizer;
 private:

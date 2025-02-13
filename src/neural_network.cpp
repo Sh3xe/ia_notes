@@ -1,8 +1,40 @@
 #include "neural_network.hpp"
 #include "utils.hpp"
 #include <random>
+#include <fstream>
+#include <iostream>
 #include <cassert>
 #include <ctime>
+
+static std::string layer_name(NN::Layer::Func func)
+{
+	switch(func)
+	{
+	case NN::Layer::Func::LINEAR:
+		return "lin";
+	case NN::Layer::Func::SOFTMAX:
+		return "sm";
+	case NN::Layer::Func::RELU:
+		return "relu";
+	default:
+		assert(false);
+	}
+
+	return "";
+}
+
+NN::Layer::Func layer_func(const std::string &str)
+{
+	if(str == "lin") 
+		return NN::Layer::Func::LINEAR;
+	if(str == "sm")
+		return NN::Layer::Func::SOFTMAX;
+	if(str == "relu")
+		return NN::Layer::Func::RELU;
+
+	assert(false);
+	return NN::Layer::Func::LINEAR;
+}
 
 namespace NN 
 {
@@ -154,6 +186,72 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 
 	// return [input_weights, output_weights]
 	return std::make_pair(input_weights, current_activation);
+}
+
+
+bool NeuralNet::save_weights(const std::string &path)
+{
+	std::ofstream file {path};
+
+	if(!file)
+	{
+		std::cout << "Cannot open: \"" << path << "\"" << std::endl;
+		return false;
+	}
+
+	file << m_architecture.size() << std::endl;
+
+	for(auto layer: m_architecture)
+	{
+		file << layer_name(layer.operation) << " " << layer.input_size << " " << layer.output_size << std::endl;
+	}
+
+	for(const auto &v: topological_sort(m_output_weights))
+	{
+		file << v->value() << " ";
+	}
+
+	file.close();
+	return true;
+}
+	
+bool NeuralNet::load_weights(const std::string &path)
+{
+	std::ifstream file {path};
+
+	if(!file)
+	{
+		std::cout << "Cannot open: \"" << path << "\"" << std::endl;
+		return false;
+	}
+
+	int layer_count = 0;
+	file >> layer_count;
+
+	m_architecture.clear();
+	std::string layer_name;
+	int input_size = 0;
+	int output_size = 0;
+	NN::Layer layer;
+	for(int i = 0; i < layer_count; ++i)
+	{
+		file >> layer_name >> input_size >> output_size;
+		layer.operation = layer_func(layer_name);
+		layer.input_size = input_size;
+		layer.output_size = output_size;
+
+		m_architecture.push_back(layer);
+	}
+
+	auto [m_input_weights, m_output_weights] = construct_tree(false);
+
+	for(const auto &v: topological_sort(m_output_weights))
+	{
+		file >> v->m_value;
+	}
+
+	file.close();
+	return true;
 }
 
 } // namespace NN
