@@ -1,6 +1,8 @@
 # Autograd implementation in C++
 
-This algorithm implements an autograd in C++ and tests it on the MNIST dataset.
+This project implements neural network training in C++ using an autograd system for automatic backpropagation.
+
+It include code for loading the MNIST digit dataset.
 
 # How to run
 
