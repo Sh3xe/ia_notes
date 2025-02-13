@@ -40,12 +40,13 @@ void CG::forward()
 	{
 	case Op::ADD:
 		assert(m_children.size() > 1);
+		m_value = 0.0;
 		for(auto &child: m_children)
 			m_value += child->value();
 		break;
 	case Op::MUL:
 		assert(m_children.size() == 2);
-		m_value += m_children[1]->value() * m_children[0]->value();
+		m_value = m_children[1]->value() * m_children[0]->value();
 		break;
 	case Op::SUB:
 		assert(m_children.size() == 2);
