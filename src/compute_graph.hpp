@@ -25,9 +25,6 @@ public:
 	// Initiate backpropagation from this node's value
 	void backprop();
 
-	// Zero out all of the gradients starting from the current node
-	void zero_grad();
-
 	void backward();
 
 	void forward();

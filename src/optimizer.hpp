@@ -21,6 +21,8 @@ public:
 
 	void accumulate(const CG::Value &value);
 
+	double grad_l2_norm();
+
 private:
 	std::vector<CG::Value> m_network_weights;
 	double m_learning_rate = 0.0;

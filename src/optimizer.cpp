@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include <cassert>
+#include <cmath>
 
 namespace NN
 {
@@ -24,6 +25,17 @@ void Optimizer::zero_grad()
 {
 	for(const auto &v: m_network_weights)
 		v->m_diff = 0.0;
+}
+
+double Optimizer::grad_l2_norm()
+{
+	double res = 0.0;
+	for(const auto &v: m_network_weights)
+	{
+		res += v->m_diff*v->m_diff;
+	}
+
+	return sqrt(res);
 }
 
 void Optimizer::step()

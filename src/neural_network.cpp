@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include <random>
 #include <cassert>
+#include <ctime>
 
 namespace NN 
 {
@@ -96,6 +97,7 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 
 	// for each layer, apply its input
 	std::default_random_engine rng;
+	rng.seed(time(NULL));
 	std::uniform_real_distribution<double> distribution(-1.0, 1.0);
 	for(const auto &layer: m_architecture)
 	{
@@ -106,7 +108,7 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 		{
 		case Layer::Func::LINEAR:
 		{
-			assert(layer.input_size == current_activation.size());
+			assert((size_t)layer.input_size == current_activation.size());
 			layer_output.reserve(layer.output_size);
 			for(int i = 0; i < layer.output_size; ++i)
 			{

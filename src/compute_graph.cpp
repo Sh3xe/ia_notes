@@ -27,13 +27,6 @@ void CG::backprop()
 	}
 }
 
-void CG::zero_grad()
-{
-	m_diff = 0;
-	for(auto &child: m_children)
-		child->zero_grad();
-}
-
 void CG::forward()
 {
 	switch(m_op)
@@ -69,7 +62,7 @@ void CG::forward()
 		m_value = -log(m_children[m_input_index]->m_value + cross_entropy_epsilon);
 		break;
 	case Op::RELU:
-		m_value = m_value > 0.0 ? m_value: 0.0;
+		m_value = m_children[0]->m_value > 0.0 ? m_children[0]->m_value: 0.0;
 		break;
 	default:
 		assert(false);
@@ -110,10 +103,10 @@ void CG::backward()
 		break;
 	case Op::RELU:
 		assert(m_children.size() == 1);
-		m_children[0]->m_diff += m_value > 0.0 ? 1.0: 0.0;
+		m_children[0]->m_diff += (m_value > 0.0 ? m_diff: 0.0);
 		break;
 	case Op::CROSS_ENTHROPY:
-		m_children[m_input_index]->m_diff -= 1 / (m_value + cross_entropy_epsilon);
+		m_children[m_input_index]->m_diff -= 1.0 / (m_children[m_input_index]->m_value + cross_entropy_epsilon);
 		break;
 	default: 
 		assert(false);
@@ -218,7 +211,7 @@ std::vector<Value> softmax( const std::vector<Value> &input )
 		ptr->m_children = input;
 		ptr->m_op = Op::SOFTMAX;
 		ptr->m_input_index = i;
-		ptr->m_value = input[i]->m_value / exp_sum;
+		ptr->m_value = exp(input[i]->m_value) / exp_sum;
 
 		ret.push_back(ptr);
 	}

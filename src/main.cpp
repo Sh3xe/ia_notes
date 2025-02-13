@@ -27,8 +27,8 @@ int find_prediction(const std::vector<CG::Value> &y_pred )
 
 void train_and_save_nn()
 {
-	int epochs = 1000;
-	int batch_size = 32;
+	int epochs = 100;
+	int batch_size = 64;
 	int test_size = 100;
 	int test_every = 10;
 	int current_test_id = 0;
@@ -38,7 +38,7 @@ void train_and_save_nn()
 		NN::softmax()
 	});
 
-	NN::Optimizer optimizer(neural_net, 1e-3 / (double)batch_size, 0.5);
+	NN::Optimizer optimizer(neural_net, 0.0001 / (double)batch_size, 0.9);
 
 	auto [X_train, y_train] = load_mnist_digits_train();
 	auto [X_test, y_test] = load_mnist_digits_test();
@@ -91,10 +91,23 @@ void train_and_save_nn()
 		std::cout << "Epoch " << epoch << " / " << epochs << std::endl;
 		std::cout << "Mean error: " << error / (double)test_size<< std::endl;
 		std::cout << "Accuracy: " << (correct_guess / (double)test_size)*100 << "%" <<std::endl;
+		std::cout << "Gradient L2 norm: " << optimizer.grad_l2_norm() << std::endl;
+	}
+}
+
+void test_img()
+{
+	auto img = load_images("../dataset/t10k-images.idx3-ubyte");
+	auto label = load_labels("../dataset/t10k-labels.idx1-ubyte");
+	for(int i = 0; i < 10; ++i)
+	{
+		std::string name = std::to_string(i) + " " + std::to_string((int)label[i]) + std::string(".pgm");
+		img[i].save_pgm(name);
 	}
 }
 
 int main()
 {
+	train_and_save_nn();
 	return 0;
 }
