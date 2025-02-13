@@ -11,6 +11,8 @@ struct Image
 	{
 	}
 
+	bool save_pgm(const std::string &path );
+
 	std::vector<double> convert_to_01_vector() const;
 
 	std::vector<uint8_t> data;

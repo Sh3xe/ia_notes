@@ -1,5 +1,29 @@
 #include "img_data.hpp"
 #include <fstream>
+#include <iostream>
+
+bool Image::save_pgm(const std::string &path )
+{
+	std::fstream file {path, std::ios::out};
+
+	if( !file )
+	{
+		std::cout << "Cannot open: \"" << path << "\"" << std::endl;
+		return false;
+	}
+
+	file << "P2\n";
+	file << width << " " << height << " " << 255 << "\n";
+
+	for( uint32_t j  = 0; j < height; j++) {
+		for( uint32_t i  = 0; i < width; i++) {
+			file << (int)(data[i+j*width] * 255) << " ";
+		}
+		file << "\n";
+	}
+
+	return true;
+}
 
 std::vector<double> Image::convert_to_01_vector() const
 {

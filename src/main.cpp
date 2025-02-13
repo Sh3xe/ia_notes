@@ -3,7 +3,7 @@
 #include "neural_network.hpp"
 #include "optimizer.hpp"
 #include "utils.hpp"
-
+#include "img_data.hpp"
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -35,12 +35,10 @@ void train_and_save_nn()
 
 	NN::NeuralNet neural_net({
 		NN::linear(28*28, 10),
-		NN::relu(),
-		NN::linear(10, 10),
 		NN::softmax()
 	});
 
-	NN::Optimizer optimizer(neural_net, 1e-3 / (double)batch_size);
+	NN::Optimizer optimizer(neural_net, 1e-3 / (double)batch_size, 0.5);
 
 	auto [X_train, y_train] = load_mnist_digits_train();
 	auto [X_test, y_test] = load_mnist_digits_test();
@@ -91,15 +89,12 @@ void train_and_save_nn()
 
 		std::cout << "-------------------" << std::endl;
 		std::cout << "Epoch " << epoch << " / " << epochs << std::endl;
-		std::cout << "Error: " << error << std::endl;
+		std::cout << "Mean error: " << error / (double)test_size<< std::endl;
 		std::cout << "Accuracy: " << (correct_guess / (double)test_size)*100 << "%" <<std::endl;
 	}
-
-	// neural_net.save("models/mnist_v0");
 }
 
 int main()
 {
-	train_and_save_nn();
 	return 0;
 }
