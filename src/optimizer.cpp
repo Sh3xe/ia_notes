@@ -6,8 +6,13 @@
 namespace NN
 {
 
-Optimizer::Optimizer(const NeuralNet &net, double learning_rate)
-	: m_learning_rate(learning_rate)
+Optimizer::Optimizer(
+		const NeuralNet &net, 
+		double learning_rate,
+		double momentum
+	)
+	: m_learning_rate(learning_rate),
+	m_momentum(momentum)
 {
 	// Topological is deterministic and for two CG::Value with the same graph,
 	// it will yield the same order. This is how we can pair every weights from
@@ -25,7 +30,8 @@ void Optimizer::step()
 {
 	for(const auto &v: m_network_weights)
 	{
-		v->m_value -= m_learning_rate * v->m_diff;
+		v->m_vel = m_momentum * v->m_vel + v->m_diff;
+		v->m_value -= m_learning_rate * v->m_vel;
 	}
 }
 

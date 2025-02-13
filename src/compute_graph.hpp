@@ -43,6 +43,8 @@ public:
 	double m_value {0.0};
 	// The differential of some loss (the called of .backward()) over m_value
 	double m_diff {0.0};
+	// Used to store the velocity for optimization
+	double m_vel {0.0};
 };
 
 

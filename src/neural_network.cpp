@@ -108,7 +108,7 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 		{
 			assert(layer.input_size == current_activation.size());
 			layer_output.reserve(layer.output_size);
-			for(size_t i = 0; i < layer.output_size; ++i)
+			for(int i = 0; i < layer.output_size; ++i)
 			{
 				// output = bias + sum_i x_i*w_i
 				CG::Value bias = CG::value(random ? distribution(rng): 0.0);

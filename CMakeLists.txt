@@ -1,11 +1,11 @@
 cmake_minimum_required( VERSION 3.22.1 )
 
-project( ia_framework )
+project( autograd_nn )
 
 set(CXX_STANDARD 17)
 set(CXX_STANDARD_REQUIRED TRUE)
 
-add_executable( ia_framework 
+add_executable( autograd_nn 
 	src/main.cpp
 	src/neural_network.cpp src/neural_network.hpp
 	src/img_data.cpp src/img_data.hpp
@@ -14,3 +14,9 @@ add_executable( ia_framework
 	src/optimizer.hpp src/optimizer.cpp
 	src/compute_graph.cpp
 )
+
+if(MSVC)
+  target_compile_options(autograd_nn PRIVATE /W4 /WX)
+else()
+  target_compile_options(autograd_nn PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

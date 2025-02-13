@@ -9,7 +9,11 @@ namespace NN
 class Optimizer
 {
 public:
-	Optimizer(const NeuralNet &network, double learning_rate);
+	Optimizer(
+		const NeuralNet &network, 
+		double learning_rate=0.001,
+		double momentum = 0.9
+	);
 
 	void zero_grad();
 
@@ -20,6 +24,7 @@ public:
 private:
 	std::vector<CG::Value> m_network_weights;
 	double m_learning_rate = 0.0;
+	double m_momentum = 0.0;
 };
 
 };

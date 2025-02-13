@@ -11,7 +11,7 @@ std::vector<double> Image::convert_to_01_vector() const
 		vec.push_back((double)data[i] / 255.0f);
 	}
 
-	return std::move(vec);
+	return vec;
 }
 
 uint32_t endian_swap( uint32_t num )
