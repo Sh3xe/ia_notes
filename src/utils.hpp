@@ -1,6 +1,8 @@
 #pragma once
 
 #include "compute_graph.hpp"
+#include <unordered_set>
+#include <stack>
 
 #include <vector>
 #include <cstdint>

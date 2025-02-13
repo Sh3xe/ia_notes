@@ -81,7 +81,7 @@ std::vector<CG::Value> NeuralNet::forward(const std::vector<double> &input)
 std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_tree(bool random)
 {
 	assert(m_architecture.size() != 0);
-	size_t input_size = m_architecture.begin()->output_size;
+	size_t input_size = m_architecture.begin()->input_size;
 
 	// convert the input into CG::Value(s)
 	std::vector<CG::Value> current_activation;
@@ -99,14 +99,14 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 	std::uniform_real_distribution<double> distribution(-1.0, 1.0);
 	for(const auto &layer: m_architecture)
 	{
-		assert(layer.input_size == current_activation.size());
-
 		std::vector<CG::Value> layer_output;
 
 		// apply the right operation
 		switch(layer.operation)
 		{
 		case Layer::Func::LINEAR:
+		{
+			assert(layer.input_size == current_activation.size());
 			layer_output.reserve(layer.output_size);
 			for(size_t i = 0; i < layer.output_size; ++i)
 			{
@@ -124,20 +124,26 @@ std::pair<std::vector<CG::Value>, std::vector<CG::Value>> NeuralNet::construct_t
 
 				layer_output.push_back(CG::list_add(to_be_added));
 			}
+
 			break;
+		}
 		case Layer::Func::RELU:
-			layer_output.reserve(layer.output_size);
+		{
+			layer_output.reserve(current_activation.size());
 			for(const auto &v: current_activation)
 			{
 				layer_output.push_back(CG::relu(v));
 			}
 			break;
+		}
 		case Layer::Func::SOFTMAX:
+		{
 			layer_output = CG::softmax(current_activation);
 			break;
 			default:
 				assert(false);
 				break;
+		}
 		}
 
 		// switch the 2 lists

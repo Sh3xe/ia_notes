@@ -2,23 +2,13 @@
 
 #include <memory>
 #include <vector>
-#include <stack>
-#include <unordered_set>
-
-namespace NN { class Optimizer; }
 
 namespace CG 
 {
 
 enum class Op
 {
-	ADD,
-	SUB,
-	MUL,
-	RELU,
-	SOFTMAX,
-	CROSS_ENTHROPY,
-	LEAF
+	ADD, SUB, MUL, RELU, SOFTMAX,	CROSS_ENTHROPY,	LEAF
 };
 
 class CG
@@ -73,7 +63,7 @@ Value cross_entropy(
 	const std::vector<Value> &logits
 );
 
-const std::vector<Value> softmax( const std::vector<Value> &input );
+std::vector<Value> softmax( const std::vector<Value> &input );
 
 Value list_add(const std::vector<Value> &input);
 

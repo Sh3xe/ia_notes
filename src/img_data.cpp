@@ -14,15 +14,6 @@ std::vector<double> Image::convert_to_01_vector() const
 	return std::move(vec);
 }
 
-std::vector<double> one_hot_encode( uint8_t digit )
-{
-	std::vector<double> one_hot_encoding(10, 0.0);
-
-	one_hot_encoding[(size_t)digit] = 1.0;
-
-	return one_hot_encoding;
-}
-
 uint32_t endian_swap( uint32_t num )
 {
 	return ((num & 0xff000000) >> 24) | ((num & 0x00ff0000) >> 8) | ((num & 0x0000ff00) << 8) | (num << 24);
@@ -32,7 +23,10 @@ std::vector<Image> load_images( const std::string &file_path )
 {
 	std::fstream file {file_path, std::ios::in | std::ios::binary };
 
-	if( !file ) return {};
+	if( !file ) 
+	{
+		throw std::runtime_error("Cannot open " + file_path);
+	}
 
 	// Fetching the header data
 	uint32_t image_count = 0, magic_number = 0;
@@ -81,7 +75,10 @@ std::vector<uint8_t> load_labels( const std::string &file_path )
 {
 	std::fstream file {file_path, std::ios::in | std::ios::binary };
 
-	if( !file ) return {};
+	if( !file ) 
+	{
+		throw std::runtime_error("Cannot open " + file_path);
+	}
 
 	// Fetching header
 	uint32_t label_count = 0, magic_number = 0;

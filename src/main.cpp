@@ -1,35 +1,9 @@
 #include "compute_graph.hpp"
-#include "img_data.hpp"
+#include "dataset.hpp"
 #include "neural_network.hpp"
 #include "optimizer.hpp"
 
 #include <iostream>
-
-std::vector<std::vector<double>> fetch_mnist_train_images()
-{
-	auto images = load_images( "../dataset/train-images.idx3-ubyte" );
-	std::vector<std::vector<double>> converted_images;
-
-	for(const auto &img: images)
-	{
-		converted_images.push_back(img.convert_to_01_vector());
-	}
-
-	return converted_images;
-}
-
-std::vector<uint32_t> fetch_mnist_train_labels()
-{
-	auto labels = load_labels( "../dataset/train-labels.idx3-ubyte" );
-	std::vector<uint32_t> converted_labels;
-
-	for(const auto &label: labels)
-	{
-		converted_labels.push_back(static_cast<uint32_t>(label));
-	}
-
-	return converted_labels;
-}
 
 void train_and_save_nn()
 {
@@ -42,11 +16,11 @@ void train_and_save_nn()
 
 	NN::Optimizer optimizer(neural_net, 0.01);
 
-	auto X_train = fetch_mnist_train_images();
-	auto y_train = fetch_mnist_train_labels();
+	auto [X_train, y_train] = load_mnist_digits_train();
+	auto [X_test, y_test] = load_mnist_digits_test();
 
-	int epochs = 10;
-	int batch_size = 32;
+	int epochs = 1;
+	int batch_size = 1;
 
 	for(int epoch = 0; epoch < epochs; ++epoch)
 	{
@@ -81,6 +55,5 @@ void train_and_save_nn()
 int main()
 {
 	train_and_save_nn();
-
 	return 0;
 }

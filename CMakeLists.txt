@@ -9,6 +9,7 @@ add_executable( ia_framework
 	src/main.cpp
 	src/neural_network.cpp src/neural_network.hpp
 	src/img_data.cpp src/img_data.hpp
+	src/dataset.cpp src/dataset.hpp
 	src/utils.hpp src/utils.cpp
 	src/optimizer.hpp src/optimizer.cpp
 	src/compute_graph.cpp
