@@ -20,3 +20,7 @@ if(MSVC)
 else()
   target_compile_options(autograd_nn PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+add_subdirectory("eigen")
+
+target_link_libraries(autograd_nn PUBLIC Eigen3::Eigen)

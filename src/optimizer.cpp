@@ -43,7 +43,7 @@ void Optimizer::step()
 	for(const auto &v: m_network_weights)
 	{
 		v->m_vel = m_momentum * v->m_vel + v->m_diff;
-		v->m_value -= m_learning_rate * v->m_vel;
+		v->m_value -= m_learning_rate * v->m_vel * (1.0 / (double)m_accumulated_count);
 	}
 }
 
@@ -62,6 +62,8 @@ void Optimizer::accumulate(const CG::Value &cross_enthropy_loss)
 	{
 		m_network_weights[i]->m_diff += loss_weights[i]->m_diff;
 	}
+
+	++m_accumulated_count;
 }
 
 } // namespace NN

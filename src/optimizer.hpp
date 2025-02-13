@@ -27,6 +27,7 @@ private:
 	std::vector<CG::Value> m_network_weights;
 	double m_learning_rate = 0.0;
 	double m_momentum = 0.0;
+	size_t m_accumulated_count = 0;
 };
 
 };

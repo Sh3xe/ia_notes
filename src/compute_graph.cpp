@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 
+
 namespace CG 
 {
 
@@ -91,11 +92,11 @@ void CG::backward()
 		{
 			if( i == m_input_index)
 			{
-				m_children[i]->m_diff += m_value * (1.0 - m_value);
+				m_children[i]->m_diff += m_diff * m_value * (1.0 - m_value);
 			}
 			else
 			{
-				m_children[i]->m_diff += m_value * m_value * (exp(m_children[i]->value()) / exp(m_children[m_input_index]->value()));
+				m_children[i]->m_diff += - m_diff * m_value * m_value * (exp(m_children[i]->value()) / exp(m_children[m_input_index]->value()));
 			}
 		}
 		break;
@@ -106,7 +107,7 @@ void CG::backward()
 		m_children[0]->m_diff += (m_value > 0.0 ? m_diff: 0.0);
 		break;
 	case Op::CROSS_ENTHROPY:
-		m_children[m_input_index]->m_diff -= 1.0 / (m_children[m_input_index]->m_value + cross_entropy_epsilon);
+		m_children[m_input_index]->m_diff -= m_diff / (m_children[m_input_index]->m_value + cross_entropy_epsilon);
 		break;
 	default: 
 		assert(false);
