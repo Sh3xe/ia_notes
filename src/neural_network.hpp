@@ -11,6 +11,10 @@
 namespace NN
 {
 
+/**
+ * @brief Specification of a NeuralNetwork layer
+ * 
+ */
 struct Layer
 {
 	enum class Func { SOFTMAX, LINEAR, RELU };
@@ -20,10 +24,27 @@ struct Layer
 	int output_size;
 };
 
+/**
+ * @brief Each element of the output layer is an affine function of the input
+ * 
+ * @param input_size 
+ * @param output_size 
+ * @return Layer 
+ */
 Layer linear(int input_size, int output_size);
 
+/**
+ * @brief Applies relu to the previous layer
+ * 
+ * @return Layer 
+ */
 Layer relu();
 
+/**
+ * @brief Applies softmax to the previous layer
+ * 
+ * @return layer
+ */
 Layer softmax();
 
 class NeuralNet

@@ -32,7 +32,7 @@ void train_and_save_nn()
 	int test_size = 100;
 	int test_every = 10;
 	int current_test_id = 0;
-
+	
 	NN::NeuralNet neural_net({
 		NN::linear(28*28, 16),
 		NN::relu(),
@@ -97,17 +97,6 @@ void train_and_save_nn()
 	}
 
 	neural_net.save_weights("out.txt");
-}
-
-void test_img()
-{
-	auto img = load_images("../dataset/t10k-images.idx3-ubyte");
-	auto label = load_labels("../dataset/t10k-labels.idx1-ubyte");
-	for(int i = 0; i < 10; ++i)
-	{
-		std::string name = std::to_string(i) + " " + std::to_string((int)label[i]) + std::string(".pgm");
-		img[i].save_pgm(name);
-	}
 }
 
 int main()

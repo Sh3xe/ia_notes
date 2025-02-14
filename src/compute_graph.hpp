@@ -16,13 +16,20 @@ class CG
 public:
 	CG(double value);
 
-	// Returns the node's value
+	/**
+	 * @brief Returns the node's value
+	 * 
+	 * @return double 
+	 */
 	inline double value() const {return m_value; }
 
 	// Returns the node's differential over the node which called .backward()
 	inline double diff() const {return m_diff; }
 
-	// Initiate backpropagation from this node's value
+	/**
+	 * @brief Initiate backpropagation from this node's value
+	 * 
+	 */
 	void backprop();
 
 	void backward();
@@ -31,15 +38,20 @@ public:
 
 	// List of the inputs
 	std::vector<std::shared_ptr<CG>> m_children;
+
 	// Operation performed
 	Op m_op {Op::LEAF};
+
 	// If the operation is "Softmax", what index of the output of softmax on m_children does this node corresponds to ?
 	// If the operation is "CrossEntrhopy", what is the index of the correct class ?
 	uint32_t m_input_index {0};
+
 	// The actual value of the node
 	double m_value {0.0};
+
 	// The differential of some loss (the called of .backward()) over m_value
 	double m_diff {0.0};
+	
 	// Used to store the velocity for optimization
 	double m_vel {0.0};
 };
